@@ -1,76 +1,107 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_spendly/models/transaction.dart';
+import '../database/db_helper.dart';
 
 class AppState extends ChangeNotifier {
-  List<Transaction> _transactions = [
-    Transaction(
-      id: '1', title: 'Gaji Bulanan', amount: 8500000, 
-      type: TransactionType.income, categoryId: 'salary', 
-      date: DateTime.now()
-    ),
-    Transaction(
-      id: '2', title: 'Warteg Bahari', amount: 35000, 
-      type: TransactionType.expense, categoryId: 'food', 
-      date: DateTime.now()
-    ),
-    Transaction(
-      id: '3', title: 'Kopi Kenangan', amount: 15000, 
-      type: TransactionType.expense, categoryId: 'food', 
-      date: DateTime.now()
-    ),
-    Transaction(
-      id: '4', title: 'Trading Crypto', amount: 953000, 
-      type: TransactionType.income, categoryId: 'trading', 
-      date: DateTime.now().subtract(const Duration(days: 1))
-    ),
-    Transaction(
-      id: '5', title: 'Makan Malam', amount: 46300, 
-      type: TransactionType.expense, categoryId: 'food', 
-      date: DateTime.now().subtract(const Duration(days: 1))
-    ),
-  ];
-  String _userName = 'Pengguna';
-  String _latestAIInsight = 'Berdasarkan riwayat transaksi Anda, pengeluaran terbesar minggu ini ada di kategori Makanan. Pertimbangkan untuk mengurangi pemesanan online untuk sisa bulan ini.';
+  List<Transaction> _transactions = [];
+  bool _isLoading = true;
+  DateTime _selectedMonth = DateTime(DateTime.now().year, DateTime.now().month);
 
-  List<Transaction> get transactions => _transactions;
+  String _userName = 'Pengguna';
+  String _latestAIInsight =
+      'Berdasarkan riwayat transaksi Anda, pengeluaran terbesar bulan ini ada di kategori Makanan.';
+
+  List<Transaction> get transactions {
+    return _transactions
+        .where(
+          (t) =>
+              t.date.month == _selectedMonth.month &&
+              t.date.year == _selectedMonth.year,
+        )
+        .toList();
+  }
+
+  List<Transaction> get allTransactions => _transactions;
+  bool get isLoading => _isLoading;
   String get userName => _userName;
   String get latestAIInsight => _latestAIInsight;
+  DateTime get selectedMonth => _selectedMonth;
 
-  void addTransaction(Transaction tx) {
-    _transactions.insert(0, tx);
+  void setMonth(DateTime month) {
+    _selectedMonth = DateTime(month.year, month.month);
     notifyListeners();
   }
 
-  void updateTransaction(String id, Transaction updated) {
-    final idx = _transactions.indexWhere((t) => t.id == id);
-    if (idx != -1) {
-      _transactions[idx] = updated;
-      notifyListeners();
-    }
+  void nextMonth() {
+    _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month + 1);
+    notifyListeners();
   }
 
-  void deleteTransaction(String id) {
-    _transactions.removeWhere((t) => t.id == id);
+  void previousMonth() {
+    _selectedMonth = DateTime(_selectedMonth.year, _selectedMonth.month - 1);
     notifyListeners();
+  }
+
+  AppState() {
+    loadTransactions();
+  }
+
+  Future<void> loadTransactions() async {
+    _isLoading = true;
+    notifyListeners();
+
+    final dbHelper = DatabaseHelper.instance;
+    final dataList = await dbHelper.queryAllRows(
+      DatabaseHelper.tableTransactions,
+    );
+
+    _transactions = dataList.map((item) => Transaction.fromMap(item)).toList();
+
+    // Sort descending by date
+    _transactions.sort((a, b) => b.date.compareTo(a.date));
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> addTransaction(Transaction tx) async {
+    final dbHelper = DatabaseHelper.instance;
+    await dbHelper.insert(DatabaseHelper.tableTransactions, tx.toMap());
+    await loadTransactions();
+  }
+
+  Future<void> updateTransaction(String id, Transaction updated) async {
+    final dbHelper = DatabaseHelper.instance;
+    await dbHelper.update(
+      DatabaseHelper.tableTransactions,
+      updated.toMap(),
+      id,
+    );
+    await loadTransactions();
+  }
+
+  Future<void> deleteTransaction(String id) async {
+    final dbHelper = DatabaseHelper.instance;
+    await dbHelper.delete(DatabaseHelper.tableTransactions, id);
+    await loadTransactions();
   }
 
   double get totalBalance {
-    return _transactions.fold(0, (sum, t) => 
-      t.type == TransactionType.income ? sum + t.amount : sum - t.amount
+    return _transactions.fold(
+      0,
+      (sum, t) =>
+          t.type == TransactionType.income ? sum + t.amount : sum - t.amount,
     );
   }
 
   Map<String, double> get monthlyStats {
-    final now = DateTime.now();
-    final thisMonth = _transactions.where((t) => 
-      t.date.month == now.month && t.date.year == now.year
-    ).toList();
-    
-    final income = thisMonth.where((t) => t.type == TransactionType.income)
+    final income = transactions
+        .where((t) => t.type == TransactionType.income)
         .fold(0.0, (s, t) => s + t.amount);
-    final expense = thisMonth.where((t) => t.type == TransactionType.expense)
+    final expense = transactions
+        .where((t) => t.type == TransactionType.expense)
         .fold(0.0, (s, t) => s + t.amount);
-        
+
     return {'income': income, 'expense': expense, 'net': income - expense};
   }
 }

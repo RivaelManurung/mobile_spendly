@@ -24,58 +24,100 @@ enum TransactionCategory {
 extension TransactionCategoryExt on TransactionCategory {
   String get label {
     switch (this) {
-      case TransactionCategory.gaji: return 'Gaji';
-      case TransactionCategory.bisnis: return 'Bisnis';
-      case TransactionCategory.investasi: return 'Investasi';
-      case TransactionCategory.hadiah: return 'Hadiah';
-      case TransactionCategory.lainnyaPemasukan: return 'Lainnya';
-      case TransactionCategory.makanan: return 'Makanan';
-      case TransactionCategory.transportasi: return 'Transportasi';
-      case TransactionCategory.belanja: return 'Belanja';
-      case TransactionCategory.tagihan: return 'Tagihan';
-      case TransactionCategory.hiburan: return 'Hiburan';
-      case TransactionCategory.kesehatan: return 'Kesehatan';
-      case TransactionCategory.pendidikan: return 'Pendidikan';
-      case TransactionCategory.tabungan: return 'Tabungan';
-      case TransactionCategory.lainnyaPengeluaran: return 'Lainnya';
+      case TransactionCategory.gaji:
+        return 'Gaji';
+      case TransactionCategory.bisnis:
+        return 'Bisnis';
+      case TransactionCategory.investasi:
+        return 'Investasi';
+      case TransactionCategory.hadiah:
+        return 'Hadiah';
+      case TransactionCategory.lainnyaPemasukan:
+        return 'Lainnya';
+      case TransactionCategory.makanan:
+        return 'Makanan';
+      case TransactionCategory.transportasi:
+        return 'Transportasi';
+      case TransactionCategory.belanja:
+        return 'Belanja';
+      case TransactionCategory.tagihan:
+        return 'Tagihan';
+      case TransactionCategory.hiburan:
+        return 'Hiburan';
+      case TransactionCategory.kesehatan:
+        return 'Kesehatan';
+      case TransactionCategory.pendidikan:
+        return 'Pendidikan';
+      case TransactionCategory.tabungan:
+        return 'Tabungan';
+      case TransactionCategory.lainnyaPengeluaran:
+        return 'Lainnya';
     }
   }
 
   IconData get icon {
     switch (this) {
-      case TransactionCategory.gaji: return Icons.work_rounded;
-      case TransactionCategory.bisnis: return Icons.business_center_rounded;
-      case TransactionCategory.investasi: return Icons.trending_up_rounded;
-      case TransactionCategory.hadiah: return Icons.card_giftcard_rounded;
-      case TransactionCategory.lainnyaPemasukan: return Icons.add_circle_outline;
-      case TransactionCategory.makanan: return Icons.restaurant_rounded;
-      case TransactionCategory.transportasi: return Icons.directions_car_rounded;
-      case TransactionCategory.belanja: return Icons.shopping_bag_rounded;
-      case TransactionCategory.tagihan: return Icons.receipt_long_rounded;
-      case TransactionCategory.hiburan: return Icons.movie_rounded;
-      case TransactionCategory.kesehatan: return Icons.local_hospital_rounded;
-      case TransactionCategory.pendidikan: return Icons.school_rounded;
-      case TransactionCategory.tabungan: return Icons.savings_rounded;
-      case TransactionCategory.lainnyaPengeluaran: return Icons.more_horiz_rounded;
+      case TransactionCategory.gaji:
+        return Icons.work_rounded;
+      case TransactionCategory.bisnis:
+        return Icons.business_center_rounded;
+      case TransactionCategory.investasi:
+        return Icons.trending_up_rounded;
+      case TransactionCategory.hadiah:
+        return Icons.card_giftcard_rounded;
+      case TransactionCategory.lainnyaPemasukan:
+        return Icons.add_circle_outline;
+      case TransactionCategory.makanan:
+        return Icons.restaurant_rounded;
+      case TransactionCategory.transportasi:
+        return Icons.directions_car_rounded;
+      case TransactionCategory.belanja:
+        return Icons.shopping_bag_rounded;
+      case TransactionCategory.tagihan:
+        return Icons.receipt_long_rounded;
+      case TransactionCategory.hiburan:
+        return Icons.movie_rounded;
+      case TransactionCategory.kesehatan:
+        return Icons.local_hospital_rounded;
+      case TransactionCategory.pendidikan:
+        return Icons.school_rounded;
+      case TransactionCategory.tabungan:
+        return Icons.savings_rounded;
+      case TransactionCategory.lainnyaPengeluaran:
+        return Icons.more_horiz_rounded;
     }
   }
 
   Color get color {
     switch (this) {
-      case TransactionCategory.gaji: return const Color(0xFF2196F3);
-      case TransactionCategory.bisnis: return const Color(0xFF9C27B0);
-      case TransactionCategory.investasi: return const Color(0xFF00BCD4);
-      case TransactionCategory.hadiah: return const Color(0xFFFF9800);
-      case TransactionCategory.lainnyaPemasukan: return const Color(0xFF607D8B);
-      case TransactionCategory.makanan: return const Color(0xFFFF5722);
-      case TransactionCategory.transportasi: return const Color(0xFF3F51B5);
-      case TransactionCategory.belanja: return const Color(0xFFE91E63);
-      case TransactionCategory.tagihan: return const Color(0xFF795548);
-      case TransactionCategory.hiburan: return const Color(0xFF673AB7);
-      case TransactionCategory.kesehatan: return const Color(0xFF4CAF50);
-      case TransactionCategory.pendidikan: return const Color(0xFF009688);
-      case TransactionCategory.tabungan: return const Color(0xFF1D9E75);
-      case TransactionCategory.lainnyaPengeluaran: return const Color(0xFF9E9E9E);
+      case TransactionCategory.gaji:
+        return const Color(0xFF2196F3);
+      case TransactionCategory.bisnis:
+        return const Color(0xFF9C27B0);
+      case TransactionCategory.investasi:
+        return const Color(0xFF00BCD4);
+      case TransactionCategory.hadiah:
+        return const Color(0xFFFF9800);
+      case TransactionCategory.lainnyaPemasukan:
+        return const Color(0xFF607D8B);
+      case TransactionCategory.makanan:
+        return const Color(0xFFFF5722);
+      case TransactionCategory.transportasi:
+        return const Color(0xFF3F51B5);
+      case TransactionCategory.belanja:
+        return const Color(0xFFE91E63);
+      case TransactionCategory.tagihan:
+        return const Color(0xFF795548);
+      case TransactionCategory.hiburan:
+        return const Color(0xFF673AB7);
+      case TransactionCategory.kesehatan:
+        return const Color(0xFF4CAF50);
+      case TransactionCategory.pendidikan:
+        return const Color(0xFF009688);
+      case TransactionCategory.tabungan:
+        return const Color(0xFF1D9E75);
+      case TransactionCategory.lainnyaPengeluaran:
+        return const Color(0xFF9E9E9E);
     }
   }
 
@@ -155,6 +197,39 @@ class Transaction {
       category: category ?? this.category,
       date: date ?? this.date,
       paymentMethod: paymentMethod ?? this.paymentMethod,
+    );
+  }
+
+  // Convert to map for SQLite
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'notes': note,
+      'amount': amount,
+      'type': type == TransactionType.income ? 'Income' : 'Expense',
+      'categoryId': category.name,
+      'date': date.toIso8601String(),
+      'accountId': paymentMethod ?? 'acc_cash',
+    };
+  }
+
+  // Get from map
+  factory Transaction.fromMap(Map<String, dynamic> map) {
+    return Transaction(
+      id: map['id'],
+      title: map['title'],
+      note: map['notes'],
+      amount: map['amount'],
+      type: map['type'] == 'Income'
+          ? TransactionType.income
+          : TransactionType.expense,
+      category: TransactionCategory.values.firstWhere(
+        (e) => e.name == map['categoryId'],
+        orElse: () => TransactionCategory.lainnyaPengeluaran,
+      ),
+      date: DateTime.parse(map['date']),
+      paymentMethod: map['accountId'],
     );
   }
 }

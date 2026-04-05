@@ -7,6 +7,7 @@ import 'package:mobile_spendly/utils/app_theme.dart';
 import 'package:mobile_spendly/widgets/charts/weekly_bar_chart.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:mobile_spendly/utils/formatters.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 class StatisticsPage extends StatelessWidget {
   const StatisticsPage({super.key});
@@ -24,28 +25,48 @@ class StatisticsPage extends StatelessWidget {
           final transactions = state.transactions;
           final stats = state.monthlyStats;
           
-          // Calculate Category Breakdown (Real)
+          // --- REAL WEEKLY DATA CALCULATION ---
+          final now = DateTime.now();
+          final List<double> weeklyIncome = List.filled(7, 0.0);
+          final List<double> weeklyExpense = List.filled(7, 0.0);
+          
+          for (int i = 0; i < 7; i++) {
+            final day = now.subtract(Duration(days: 6 - i));
+            final dayIncome = transactions
+                .where((t) => isSameDay(t.date, day) && t.type == TransactionType.income)
+                .fold(0.0, (s, t) => s + t.amount);
+            final dayExpense = transactions
+                .where((t) => isSameDay(t.date, day) && t.type == TransactionType.expense)
+                .fold(0.0, (s, t) => s + t.amount);
+            
+            weeklyIncome[i] = dayIncome / 100000; // Scaling for chart visibility if needed, or use raw
+            weeklyExpense[i] = dayExpense / 100000;
+          }
+
+          // --- REAL CATEGORY BREAKDOWN ---
           final Map<TransactionCategory, double> categoryTotals = {};
           final expenseTxs = transactions.where((t) => t.type == TransactionType.expense).toList();
           final totalExpense = expenseTxs.fold(0.0, (s, t) => s + t.amount);
 
-          // Mock mapping categories (In real app, we fetch from a repository)
           final categories = {
             'food': const TransactionCategory(id: 'food', label: 'Makanan', icon: '🍜', color: Color(0xFFF97316)),
-            'salary': const TransactionCategory(id: 'salary', label: 'Goji', icon: '💼', color: Color(0xFF10B981)),
+            'salary': const TransactionCategory(id: 'salary', label: 'Gaji', icon: '💼', color: Color(0xFF10B981)),
             'trading': const TransactionCategory(id: 'trading', label: 'Investasi', icon: '📈', color: Color(0xFF6366F1)),
+            'shopping': const TransactionCategory(id: 'shopping', label: 'Belanja', icon: '🛍️', color: Color(0xFFEC4899)),
+            'other': const TransactionCategory(id: 'other', label: 'Lainnya', icon: '✦', color: Color(0xFF94A3B8)),
           };
 
           for (var tx in expenseTxs) {
-            final cat = categories[tx.categoryId] ?? const TransactionCategory(id: 'other', label: 'Lainnya', icon: '✦', color: Color(0xFF94A3B8));
+            final cat = categories[tx.categoryId] ?? categories['other']!;
             categoryTotals[cat] = (categoryTotals[cat] ?? 0) + tx.amount;
           }
 
-          // Convert to percentage for Donut
           final Map<TransactionCategory, double> donutData = {};
-          categoryTotals.forEach((cat, amount) {
-            donutData[cat] = (amount / totalExpense) * 100;
-          });
+          if (totalExpense > 0) {
+            categoryTotals.forEach((cat, amount) {
+              donutData[cat] = (amount / totalExpense) * 100;
+            });
+          }
           
           return SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
@@ -53,18 +74,17 @@ class StatisticsPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Summary Cards
                 _buildMiniSummary(stats),
                 
                 const SizedBox(height: 32),
-                Text('PERBANDINGAN MINGGUAN', style: AppTheme.geist(size: 11, w: FontWeight.w600, color: AppTheme.textMuted, spacing: 1.0)),
+                Text('PERBANDINGAN MINGGUAN (DLM RATUS RIBU)', style: AppTheme.geist(size: 11, w: FontWeight.w600, color: AppTheme.textMuted, spacing: 1.0)),
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: AppTheme.cardDecoration,
                   child: WeeklyBarChart(
-                    income: const [0, 8, 4, 12, 5, 15, 0], // In real app, build from state
-                    expense: const [0, 6, 9, 3, 7, 8, 0],
+                    income: weeklyIncome,
+                    expense: weeklyExpense,
                     incomeColor: Colors.blueAccent,
                     expenseColor: AppTheme.rose,
                     incomeDimColor: Colors.blueAccent.withOpacity(0.05),

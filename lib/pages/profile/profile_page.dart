@@ -92,8 +92,40 @@ class ProfilePage extends StatelessWidget {
                     _sectionLabel('DATA & LAPORAN'),
                     const SizedBox(height: 12),
                     _buildMenuCard([
-                      _MenuItem(icon: LucideIcons.fileText, label: 'Export Laporan (PDF/CSV)', onTap: () {}),
+                      _MenuItem(
+                        icon: LucideIcons.fileText, 
+                        label: 'Export Laporan (PDF/CSV)', 
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Menyiapkan laporan PDF...'),
+                              backgroundColor: Colors.blueAccent,
+                            ),
+                          );
+                        }
+                      ),
                       _MenuItem(icon: LucideIcons.database, label: 'Sinkronisasi Data cloud', onTap: () {}),
+                    ]),
+
+                    const SizedBox(height: 24),
+                    _sectionLabel('PERSONALISASI'),
+                    const SizedBox(height: 12),
+                    _buildMenuCard([
+                      _MenuItem(
+                        icon: LucideIcons.target, 
+                        label: 'Atur Anggaran (Budget)', 
+                        onTap: () => _showBudgetModal(context),
+                      ),
+                      _MenuItem(
+                        icon: LucideIcons.smartphone, 
+                        label: 'Receipt Scanner (Simulasi Scan)', 
+                        onTap: () => Navigator.pushNamed(context, '/receipt-scanner'),
+                      ),
+                      _MenuItem(
+                        icon: LucideIcons.barChart, 
+                        label: 'Financial Goals', 
+                        onTap: () => Navigator.pushNamed(context, '/goal-setting'),
+                      ),
                     ]),
 
                     const SizedBox(height: 24),
@@ -132,6 +164,54 @@ class ProfilePage extends StatelessWidget {
           spacing: 1.0,
         ),
       );
+
+  void _showBudgetModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.bgPrimary,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('ATUR ANGGARAN BULANAN', style: AppTheme.geist(size: 16, w: FontWeight.w700)),
+            const SizedBox(height: 8),
+            Text('Tentukan batas pengeluaran untuk setiap kategori.', style: AppTheme.geist(size: 12, color: AppTheme.textMuted)),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: 'Batas Makanan',
+                      labelStyle: AppTheme.geist(size: 12),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                const Text('Rp 2.000.000', style: TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.textPrimary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Simpan Anggaran', style: TextStyle(color: Colors.white)),
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildMenuCard(List<_MenuItem> items) {
     return Container(

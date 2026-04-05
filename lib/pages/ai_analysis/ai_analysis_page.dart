@@ -45,6 +45,9 @@ class AIAnalysisPage extends StatelessWidget {
                 ),
                 
                 const SizedBox(height: 32),
+                _buildHealthScore(),
+                
+                const SizedBox(height: 32),
                 _buildAnalysisCard(state.latestAIInsight),
                 
                 const SizedBox(height: 24),
@@ -67,6 +70,61 @@ class AIAnalysisPage extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildHealthScore() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blueAccent.withOpacity(0.1), Colors.blueAccent.withOpacity(0.01)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.blueAccent.withOpacity(0.1)),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('FINANCIAL HEALTH SCORE', style: AppTheme.geist(size: 10, w: FontWeight.w700, color: AppTheme.textMuted, spacing: 0.5)),
+              const Icon(LucideIcons.helpCircle, size: 14, color: AppTheme.textMuted),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                width: 120,
+                height: 120,
+                child: CircularProgressIndicator(
+                  value: 0.78,
+                  strokeWidth: 10,
+                  backgroundColor: AppTheme.bgSecondary,
+                  color: Colors.blueAccent,
+                  strokeCap: StrokeCap.round,
+                ),
+              ),
+              Column(
+                children: [
+                  Text('78', style: AppTheme.geist(size: 32, w: FontWeight.w700)),
+                  Text('Baik', style: AppTheme.geist(size: 12, color: AppTheme.emerald, w: FontWeight.w600)),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Skor Anda naik 5 poin dari bulan lalu. Pengeluaran hiburan Anda terkontrol dengan sangat baik.',
+            textAlign: TextAlign.center,
+            style: AppTheme.geist(size: 13, color: AppTheme.textMuted, height: 1.5),
+          ),
+        ],
       ),
     );
   }

@@ -113,18 +113,18 @@ class MonthlyTab extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppTheme.goldDim.withOpacity(0.05),
+        color: AppTheme.primary.withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.gold.withOpacity(0.1)),
+        border: Border.all(color: AppTheme.primary.withOpacity(0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(LucideIcons.sparkles, size: 14, color: AppTheme.gold),
+              const Icon(LucideIcons.sparkles, size: 14, color: AppTheme.primary),
               const SizedBox(width: 8),
-              Text('TIP BULANAN', style: AppTheme.geist(size: 10, w: FontWeight.w700, color: AppTheme.gold, spacing: 0.5)),
+              Text('TIP BULANAN', style: AppTheme.geist(size: 10, w: FontWeight.w700, color: AppTheme.primary, spacing: 0.5)),
             ],
           ),
           const SizedBox(height: 12),

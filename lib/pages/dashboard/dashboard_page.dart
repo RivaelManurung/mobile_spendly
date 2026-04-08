@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:mobile_spendly/state/app_state.dart';
@@ -12,6 +13,9 @@ import 'package:mobile_spendly/pages/transactions/transaction_detail_page.dart';
 import 'package:mobile_spendly/widgets/dashboard/calendar_tab.dart';
 import 'package:mobile_spendly/widgets/dashboard/monthly_tab.dart';
 import 'package:mobile_spendly/widgets/dashboard/summary_tab.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+
+import 'package:mobile_spendly/services/sync_service.dart';
 
 // ─── DASHBOARD PAGE ───────────────────────────────────────────────
 class DashboardPage extends StatefulWidget {
@@ -23,6 +27,15 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   int _activeTabIndex = 0; // 0: Harian, 1: Kalender, 2: Bulanan, etc.
+
+  @override
+  void initState() {
+    super.initState();
+    // Sinkronisasi otomatis setiap kali masuk ke Dashboard
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SyncService>().syncAll();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,22 +89,46 @@ class _DashboardPageState extends State<DashboardPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.auto_awesome, size: 48, color: AppTheme.gold),
-                const SizedBox(height: 16),
+                state.isAIAnalysing 
+                  ? const CircularProgressIndicator(strokeWidth: 2)
+                  : const Icon(LucideIcons.sparkles, size: 48, color: Colors.blueAccent),
+                const SizedBox(height: 24),
                 Text(
-                  'Analisis AI',
+                  'AI Financial Analyst',
                   style: AppTheme.geist(size: 18, w: FontWeight.w700),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  state.latestAIInsight,
-                  textAlign: TextAlign.center,
-                  style: AppTheme.geist(
-                    size: 14,
-                    color: AppTheme.textMuted,
-                    height: 1.5,
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: AppTheme.bgCard,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.blueAccent.withOpacity(0.1)),
+                  ),
+                  child: Text(
+                    state.latestAIInsight,
+                    textAlign: TextAlign.center,
+                    style: AppTheme.geist(
+                      size: 14,
+                      color: AppTheme.textPrimary,
+                      height: 1.6,
+                      w: FontWeight.w500,
+                    ),
                   ),
                 ),
+                const SizedBox(height: 32),
+                if (!state.isAIAnalysing)
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.textPrimary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () => state.refreshAIInsight(),
+                    icon: const Icon(LucideIcons.refreshCw, size: 16),
+                    label: const Text('Perbarui Analisis'),
+                  ),
               ],
             ),
           ),
@@ -125,70 +162,31 @@ class _Header extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    Fmt.greeting().toUpperCase(),
+                    DateFormat('EEEE, d MMMM yyyy', 'id_ID').format(DateTime.now()).toUpperCase(),
                     style: AppTheme.geist(
                       size: 9,
-                      w: FontWeight.w500,
+                      w: FontWeight.w600,
                       color: AppTheme.textMuted,
                       spacing: 1.2,
                     ),
                   ),
                   const SizedBox(height: 5),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          state.userName,
-                          style: AppTheme.geist(
-                            size: 26,
-                            w: FontWeight.w500,
-                            spacing: -0.3,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          '✦',
-                          style: AppTheme.geist(size: 16, color: AppTheme.gold),
-                        ),
-                      ],
-                    ),
+                  Text(
+                    'Halo, Rivael!',
+                    style: AppTheme.geist(size: 18, w: FontWeight.w800),
                   ),
                 ],
               ),
             ),
-            _AvatarCircle(name: state.userName),
+            // TOMBOL SYNC MANUAL
+            IconButton(
+              onPressed: () {
+                print('🚀 [UI] Sinkronisasi manual dipicu...');
+                context.read<SyncService>().syncAll();
+              },
+              icon: const Icon(LucideIcons.refreshCw, size: 20, color: Colors.blueAccent),
+            ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AvatarCircle extends StatelessWidget {
-  final String name;
-  const _AvatarCircle({required this.name});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 42,
-      height: 42,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: AppTheme.bgSecondary,
-        border: Border.all(color: AppTheme.goldDim, width: 0.5),
-      ),
-      child: Center(
-        child: Text(
-          name.isNotEmpty ? name[0].toUpperCase() : 'U',
-          style: AppTheme.geist(
-            size: 16,
-            w: FontWeight.w500,
-            color: AppTheme.gold,
-          ),
         ),
       ),
     );
@@ -326,7 +324,7 @@ class _TabItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           border: isActive
-              ? const Border(bottom: BorderSide(color: AppTheme.rose, width: 2))
+              ? const Border(bottom: BorderSide(color: AppTheme.primary, width: 3))
               : null,
         ),
         child: Text(
@@ -452,7 +450,7 @@ class _GroupedTransactionList extends StatelessWidget {
             .where((t) => t.type == TransactionType.income)
             .fold(0.0, (s, t) => s + (t.amount));
         final dayExpense = txs
-            .where((t) => t.type == TransactionType.expense)
+            .where((t) => t.type == TransactionType.expense || t.type == TransactionType.goal)
             .fold(0.0, (s, t) => s + (t.amount));
         final netBalance = dayIncome - dayExpense;
 
@@ -518,55 +516,82 @@ class _DailyItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        // Navigation using MaterialPageRoute for now
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => TransactionDetailPage(tx: tx)),
+    return Consumer<AppState>(
+      builder: (context, state, _) {
+
+        return InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => TransactionDetailPage(tx: tx)),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: const BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: AppTheme.border, width: 0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                _buildIcon(state),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        tx.title,
+                        style: AppTheme.geist(size: 15, w: FontWeight.w500),
+                      ),
+                      _buildSublabel(state),
+                    ],
+                  ),
+                ),
+                Text(
+                  Fmt.idr(tx.amount),
+                  style: AppTheme.mono(
+                    size: 13,
+                    color: tx.type == TransactionType.income
+                        ? Colors.blueAccent
+                        : AppTheme.rose,
+                  ),
+                ),
+              ],
+            ),
+          ),
         );
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: const BoxDecoration(
-          border: Border(
-            bottom: BorderSide(color: AppTheme.border, width: 0.3),
-          ),
-        ),
-        child: Row(
-          children: [
-            Text(
-              'Other',
-              style: AppTheme.geist(size: 13, color: AppTheme.textMuted),
-            ),
-            const SizedBox(width: 40),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    tx.title,
-                    style: AppTheme.geist(size: 15, w: FontWeight.w500),
-                  ),
-                  Text(
-                    'Cash',
-                    style: AppTheme.geist(size: 11, color: AppTheme.textMuted),
-                  ),
-                ],
-              ),
-            ),
-            Text(
-              Fmt.idr(tx.amount),
-              style: AppTheme.mono(
-                size: 13,
-                color: tx.type == TransactionType.income
-                    ? Colors.blueAccent
-                    : AppTheme.rose,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
+  }
+
+  Widget _buildIcon(AppState state) {
+    if (tx.type == TransactionType.goal) {
+      final goal = state.getGoal(tx.categoryId);
+      final color = goal != null ? Color(int.parse(goal.color)) : AppTheme.textMuted;
+      return Container(
+        width: 40, height: 40,
+        decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+        child: Center(child: Text(goal?.icon ?? '🎯', style: const TextStyle(fontSize: 18))),
+      );
+    } else {
+      final cat = state.getCategory(tx.categoryId);
+      final catColor = cat?.color ?? AppTheme.textMuted;
+      return Container(
+        width: 40, height: 40,
+        decoration: BoxDecoration(color: catColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+        child: Center(child: Text(cat?.icon ?? '📦', style: const TextStyle(fontSize: 18))),
+      );
+    }
+  }
+
+  Widget _buildSublabel(AppState state) {
+    if (tx.type == TransactionType.goal) {
+      return Text('🎯 Tabungan Goal', style: AppTheme.geist(size: 11, color: Colors.orange, w: FontWeight.w600));
+    } else {
+      final cat = state.getCategory(tx.categoryId);
+      return Text(cat?.label ?? 'Umum', style: AppTheme.geist(size: 11, color: AppTheme.textMuted));
+    }
   }
 }

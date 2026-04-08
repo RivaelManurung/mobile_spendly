@@ -5,12 +5,14 @@ import 'dart:io';
 
 class DatabaseHelper {
   static const _databaseName = "KeuanganKu.db";
-  static const _databaseVersion = 2;
+  static const _databaseVersion = 4;
 
   static const tableAccounts = 'accounts';
   static const tableCategories = 'categories';
   static const tableTransactions = 'transactions';
   static const tableBudgets = 'budgets';
+  static const tableGoals = 'goals';
+  static const tableGoalContributions = 'goal_contributions';
 
   // Singleton
   DatabaseHelper._privateConstructor();
@@ -31,11 +33,31 @@ class DatabaseHelper {
       version: _databaseVersion,
       onCreate: _onCreate,
       onUpgrade: (db, oldVersion, newVersion) async {
-        await db.execute("DROP TABLE IF EXISTS $tableBudgets");
-        await db.execute("DROP TABLE IF EXISTS $tableTransactions");
-        await db.execute("DROP TABLE IF EXISTS $tableCategories");
-        await db.execute("DROP TABLE IF EXISTS $tableAccounts");
-        await _onCreate(db, newVersion);
+        if (oldVersion < 3) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS $tableGoals (
+              id TEXT PRIMARY KEY,
+              title TEXT NOT NULL,
+              targetAmount REAL NOT NULL,
+              currentAmount REAL NOT NULL,
+              color TEXT NOT NULL,
+              icon TEXT NOT NULL,
+              deadline TEXT
+            )
+          ''');
+        }
+        if (oldVersion < 4) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS $tableGoalContributions (
+              id TEXT PRIMARY KEY,
+              goalId TEXT NOT NULL,
+              amount REAL NOT NULL,
+              date TEXT NOT NULL,
+              note TEXT,
+              FOREIGN KEY (goalId) REFERENCES $tableGoals (id) ON DELETE CASCADE
+            )
+          ''');
+        }
       },
     );
   }
@@ -43,7 +65,7 @@ class DatabaseHelper {
   Future _onCreate(Database db, int version) async {
     // 1. Table Accounts
     await db.execute('''
-      CREATE TABLE $tableAccounts (
+      CREATE TABLE IF NOT EXISTS $tableAccounts (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         icon TEXT NOT NULL,
@@ -55,7 +77,7 @@ class DatabaseHelper {
 
     // 2. Table Categories
     await db.execute('''
-      CREATE TABLE $tableCategories (
+      CREATE TABLE IF NOT EXISTS $tableCategories (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         icon TEXT NOT NULL,
@@ -66,7 +88,7 @@ class DatabaseHelper {
 
     // 3. Table Transactions
     await db.execute('''
-      CREATE TABLE $tableTransactions (
+      CREATE TABLE IF NOT EXISTS $tableTransactions (
         id TEXT PRIMARY KEY,
         title TEXT NOT NULL,
         amount REAL NOT NULL,
@@ -85,7 +107,7 @@ class DatabaseHelper {
 
     // 4. Table Budgets
     await db.execute('''
-      CREATE TABLE $tableBudgets (
+      CREATE TABLE IF NOT EXISTS $tableBudgets (
         id TEXT PRIMARY KEY,
         categoryId TEXT NOT NULL,
         amount REAL NOT NULL,
@@ -94,12 +116,37 @@ class DatabaseHelper {
       )
     ''');
 
+    // 5. Table Goals
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tableGoals (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        targetAmount REAL NOT NULL,
+        currentAmount REAL NOT NULL,
+        color TEXT NOT NULL,
+        icon TEXT NOT NULL,
+        deadline TEXT
+      )
+    ''');
+
+    // 6. Table Goal Contributions
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tableGoalContributions (
+        id TEXT PRIMARY KEY,
+        goalId TEXT NOT NULL,
+        amount REAL NOT NULL,
+        date TEXT NOT NULL,
+        note TEXT,
+        FOREIGN KEY (goalId) REFERENCES $tableGoals (id) ON DELETE CASCADE
+      )
+    ''');
+
     // Insert Default Categories
     await db.execute(
-      "INSERT INTO $tableCategories (id, name, icon, color, type) VALUES ('cat_food', 'Food & Drink', 'fastfood', '0xFFF44336', 'Expense')",
+      "INSERT INTO $tableCategories (id, name, icon, color, type) VALUES ('cat_food', 'Food & Drink', '🍔', '0xFFF44336', 'Expense')",
     );
     await db.execute(
-      "INSERT INTO $tableCategories (id, name, icon, color, type) VALUES ('cat_salary', 'Salary', 'work', '0xFF4CAF50', 'Income')",
+      "INSERT INTO $tableCategories (id, name, icon, color, type) VALUES ('cat_salary', 'Salary', '💼', '0xFF4CAF50', 'Income')",
     );
 
     // Insert Default Accounts
@@ -112,12 +159,8 @@ class DatabaseHelper {
 
     // Insert Dummy Transactions
     String dateNow = DateTime.now().toIso8601String();
-    String dateYest = DateTime.now()
-        .subtract(const Duration(days: 1))
-        .toIso8601String();
-    String datePast = DateTime.now()
-        .subtract(const Duration(days: 3))
-        .toIso8601String();
+    String dateYest = DateTime.now().subtract(const Duration(days: 1)).toIso8601String();
+    String datePast = DateTime.now().subtract(const Duration(days: 3)).toIso8601String();
 
     await db.execute(
       "INSERT INTO $tableTransactions (id, title, amount, date, type, categoryId, accountId, isRecurring) VALUES ('dummy_1', 'Gaji Bulanan', 8500000, '$datePast', 'Income', 'cat_salary', 'acc_bank', 0)",
@@ -135,22 +178,22 @@ class DatabaseHelper {
 
   // Generic CRUD
   Future<int> insert(String table, Map<String, dynamic> row) async {
-    Database db = await instance.database;
+    Database db = await database;
     return await db.insert(table, row);
   }
 
   Future<List<Map<String, dynamic>>> queryAllRows(String table) async {
-    Database db = await instance.database;
+    Database db = await database;
     return await db.query(table);
   }
 
   Future<int> update(String table, Map<String, dynamic> row, String id) async {
-    Database db = await instance.database;
+    Database db = await database;
     return await db.update(table, row, where: 'id = ?', whereArgs: [id]);
   }
 
   Future<int> delete(String table, String id) async {
-    Database db = await instance.database;
+    Database db = await database;
     return await db.delete(table, where: 'id = ?', whereArgs: [id]);
   }
 }

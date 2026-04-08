@@ -1,37 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
 import 'package:mobile_spendly/models/transaction.dart';
-import 'package:mobile_spendly/models/financial_goal.dart';
-import 'package:mobile_spendly/models/goal_contribution.dart';
 import 'package:mobile_spendly/state/app_state.dart';
 import 'package:mobile_spendly/utils/app_theme.dart';
 import 'package:mobile_spendly/utils/formatters.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
-class AddTransactionPage extends StatefulWidget {
-  const AddTransactionPage({super.key});
+class EditTransactionPage extends StatefulWidget {
+  final Transaction tx;
+  const EditTransactionPage({super.key, required this.tx});
 
   @override
-  _AddTransactionPageState createState() => _AddTransactionPageState();
+  _EditTransactionPageState createState() => _EditTransactionPageState();
 }
 
-class _AddTransactionPageState extends State<AddTransactionPage> {
+class _EditTransactionPageState extends State<EditTransactionPage> {
   final _formKey = GlobalKey<FormState>();
-  final _amountCtrl = TextEditingController();
-  final _titleCtrl = TextEditingController();
-  final _noteCtrl = TextEditingController();
+  late TextEditingController _amountCtrl;
+  late TextEditingController _titleCtrl;
+  late TextEditingController _noteCtrl;
   
-  TransactionType _type = TransactionType.expense;
-  String _catId = ''; // This will store categoryId OR goalId depending on _type
-  DateTime _date = DateTime.now();
+  late TransactionType _type;
+  late String _catId;
+  late DateTime _date;
+
+  @override
+  void initState() {
+    super.initState();
+    final formatter = NumberFormat.decimalPattern('id_ID');
+    _amountCtrl = TextEditingController(text: formatter.format(widget.tx.amount));
+    _titleCtrl = TextEditingController(text: widget.tx.title);
+    _noteCtrl = TextEditingController(text: widget.tx.note ?? '');
+    _type = widget.tx.type;
+    _catId = widget.tx.categoryId;
+    _date = widget.tx.date;
+  }
+
+  @override
+  void dispose() {
+    _amountCtrl.dispose();
+    _titleCtrl.dispose();
+    _noteCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.bgPrimary,
       appBar: AppBar(
-        title: Text('Tambah Transaksi', style: AppTheme.geist(size: 17, w: FontWeight.w600)),
+        title: Text('Edit Transaksi', style: AppTheme.geist(size: 17, w: FontWeight.w600)),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(LucideIcons.x, size: 20),
@@ -46,11 +66,9 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Segmented Type Selector
               _buildTypeSelector(),
               const SizedBox(height: 32),
 
-              // Large Amount Input
               Center(
                 child: Column(
                   children: [
@@ -61,7 +79,6 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
                         controller: _amountCtrl,
                         keyboardType: TextInputType.number,
                         textAlign: TextAlign.center,
-                        autofocus: true,
                         style: AppTheme.geist(size: 42, w: FontWeight.w700, spacing: -1.0),
                         decoration: InputDecoration(
                           hintText: '0',
@@ -77,17 +94,16 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
               ),
               const SizedBox(height: 48),
 
-              // Form Sections
               _buildFormLabel('KETERANGAN'),
               _buildInputField(
                 controller: _titleCtrl,
-                hint: _type == TransactionType.goal ? 'Tabungan untuk...' : 'Nasi Goreng, Gaji, dll...',
+                hint: 'Nasi Goreng, Gaji, dll...',
                 icon: LucideIcons.edit3,
               ),
               
               const SizedBox(height: 24),
-              _buildFormLabel(_type == TransactionType.goal ? 'PILIH TARGET GOAL' : 'KATEGORI'),
-              _buildPrimarySelector(),
+              _buildFormLabel('KATEGORI'),
+              _buildCategorySelector(),
 
               const SizedBox(height: 24),
               _buildFormLabel('TANGGAL'),
@@ -122,7 +138,6 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
         children: [
           _typeTab('Pengeluaran', TransactionType.expense, AppTheme.rose),
           _typeTab('Pemasukan', TransactionType.income, Colors.blueAccent),
-          _typeTab('Tabungan', TransactionType.goal, Colors.orange),
         ],
       ),
     );
@@ -135,7 +150,6 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
         onTap: () {
           setState(() {
             _type = type;
-            _catId = ''; // Reset selection when type changes
           });
         },
         child: AnimatedContainer(
@@ -150,7 +164,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
             child: Text(
               label,
               style: AppTheme.geist(
-                size: 12, 
+                size: 13, 
                 w: isActive ? FontWeight.w600 : FontWeight.w500,
                 color: isActive ? activeColor : AppTheme.textMuted
               ),
@@ -189,105 +203,48 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
     );
   }
 
-  Widget _buildPrimarySelector() {
+  Widget _buildCategorySelector() {
     return Consumer<AppState>(
       builder: (context, state, child) {
-        if (_type == TransactionType.goal) {
-          final goals = state.goals;
-          if (goals.isEmpty) {
-            return Text('Belum ada target goal.', style: AppTheme.geist(color: AppTheme.textMuted));
-          }
-          if (_catId.isEmpty) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) setState(() => _catId = goals.first.id);
-            });
-          }
-          return _buildGoalList(goals);
-        } else {
-          final categories = state.categories;
-          if (categories.isEmpty) {
-            return const Text('Belum ada kategori.');
-          }
-          if (_catId.isEmpty) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) setState(() => _catId = categories.first.id);
-            });
-          }
-          return _buildCategoryList(categories);
+        final categories = state.categories;
+        if (categories.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Text('Belum ada kategori.'),
+          );
         }
+
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: categories.map((cat) {
+              final isSel = _catId == cat.id;
+              return GestureDetector(
+                onTap: () => setState(() => _catId = cat.id),
+                child: Container(
+                  margin: const EdgeInsets.only(right: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isSel ? cat.color.withOpacity(0.1) : AppTheme.bgSecondary.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: isSel ? cat.color.withOpacity(0.3) : Colors.transparent),
+                  ),
+                  child: Row(
+                    children: [
+                      Text(cat.icon, style: const TextStyle(fontSize: 16)),
+                      const SizedBox(width: 8),
+                      Text(
+                        cat.label, 
+                        style: AppTheme.geist(size: 13, w: isSel ? FontWeight.w600 : FontWeight.w500, color: isSel ? cat.color : AppTheme.textPrimary)
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        );
       }
-    );
-  }
-
-  Widget _buildCategoryList(List<TransactionCategory> cats) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: cats.map((cat) {
-          final isSel = _catId == cat.id;
-          return GestureDetector(
-            onTap: () => setState(() => _catId = cat.id),
-            child: Container(
-              margin: const EdgeInsets.only(right: 10),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: isSel ? cat.color.withOpacity(0.1) : AppTheme.bgSecondary.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: isSel ? cat.color.withOpacity(0.3) : Colors.transparent),
-              ),
-              child: Row(
-                children: [
-                  Text(cat.icon, style: const TextStyle(fontSize: 16)),
-                  const SizedBox(width: 8),
-                  Text(
-                    cat.label, 
-                    style: AppTheme.geist(size: 13, w: isSel ? FontWeight.w600 : FontWeight.w500, color: isSel ? cat.color : AppTheme.textPrimary)
-                  ),
-                ],
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  Widget _buildGoalList(List<FinancialGoal> goals) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: goals.map((goal) {
-          final isSel = _catId == goal.id;
-          final color = Color(int.parse(goal.color));
-          return GestureDetector(
-            onTap: () => setState(() {
-              _catId = goal.id;
-              if (_titleCtrl.text.isEmpty || _titleCtrl.text.startsWith('Tabungan untuk:')) {
-                _titleCtrl.text = 'Tabungan untuk: ${goal.title}';
-              }
-            }),
-            child: Container(
-              margin: const EdgeInsets.only(right: 10),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: isSel ? color.withOpacity(0.1) : AppTheme.bgSecondary.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: isSel ? color.withOpacity(0.3) : Colors.transparent),
-              ),
-              child: Row(
-                children: [
-                   Text(goal.icon, style: const TextStyle(fontSize: 16)),
-                  const SizedBox(width: 8),
-                  Text(
-                    goal.title, 
-                    style: AppTheme.geist(size: 13, w: isSel ? FontWeight.w600 : FontWeight.w500, color: isSel ? color : AppTheme.textPrimary)
-                  ),
-                ],
-              ),
-            ),
-          );
-        }).toList(),
-      ),
     );
   }
 
@@ -329,35 +286,19 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
         ),
         onPressed: () {
           if (_amountCtrl.text.isEmpty || _catId.isEmpty) return;
-          final amt = double.parse(_amountCtrl.text.replaceAll('.', ''));
-          final txId = DateTime.now().millisecondsSinceEpoch.toString();
-          
-          final tx = Transaction(
-            id: txId,
+          final updatedTx = Transaction(
+            id: widget.tx.id,
             title: _titleCtrl.text.isEmpty ? 'Transaksi Tanpa Nama' : _titleCtrl.text,
-            amount: amt,
+            amount: double.parse(_amountCtrl.text.replaceAll('.', '')),
             type: _type,
             categoryId: _catId,
             date: _date,
             note: _noteCtrl.text,
           );
-          
-          final state = context.read<AppState>();
-          state.addTransaction(tx);
-          
-          if (_type == TransactionType.goal) {
-            state.addGoalContribution(GoalContribution(
-              id: txId + "_c",
-              goalId: _catId, 
-              amount: amt,
-              date: _date,
-              note: _noteCtrl.text.isEmpty ? _titleCtrl.text : _noteCtrl.text,
-            ));
-          }
-          
+          context.read<AppState>().updateTransaction(widget.tx.id, updatedTx);
           Navigator.pop(context);
         },
-        child: Text('Simpan Transaksi', style: AppTheme.geist(color: Colors.white, size: 16, w: FontWeight.w600)),
+        child: Text('Update Transaksi', style: AppTheme.geist(color: Colors.white, size: 16, w: FontWeight.w600)),
       ),
     );
   }

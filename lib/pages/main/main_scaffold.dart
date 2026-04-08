@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:provider/provider.dart';
+import 'package:mobile_spendly/services/sync_service.dart';
 import 'package:mobile_spendly/pages/dashboard/dashboard_page.dart';
 import 'package:mobile_spendly/pages/analytics/statistics_page.dart';
 import 'package:mobile_spendly/pages/profile/profile_page.dart';
@@ -16,6 +18,16 @@ class MainScaffold extends StatefulWidget {
 
 class _MainScaffoldState extends State<MainScaffold> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Sinkronisasi otomatis setiap kali aplikasi dibuka
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SyncService>().syncAll();
+    });
+  }
+
   final _pages = const [
     DashboardPage(),
     StatisticsPage(), 
@@ -33,8 +45,10 @@ class _MainScaffoldState extends State<MainScaffold> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.pushNamed(context, '/add-transaction'),
-        backgroundColor: AppTheme.gold,
-        child: const Icon(LucideIcons.plus, color: Colors.black),
+        backgroundColor: AppTheme.primary,
+        elevation: 4,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: const Icon(LucideIcons.plus, color: Colors.white),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );

@@ -7,6 +7,8 @@ import 'package:mobile_spendly/pages/main/main_scaffold.dart';
 import 'package:mobile_spendly/pages/transactions/add_transaction_page.dart';
 import 'package:mobile_spendly/pages/tools/receipt_scanner_page.dart';
 import 'package:mobile_spendly/pages/tools/goal_setting_page.dart';
+import 'package:mobile_spendly/database/app_database.dart';
+import 'package:mobile_spendly/services/sync_service.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'dart:io';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -21,9 +23,18 @@ void main() async {
     databaseFactory = databaseFactoryFfi;
   }
 
+  final database = AppDatabase();
+  final syncService = SyncService(database);
+
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => AppState(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => AppState(database: database, syncService: syncService),
+        ),
+        Provider<AppDatabase>.value(value: database),
+        Provider<SyncService>.value(value: syncService),
+      ],
       child: const SpendlyApp(),
     ),
   );

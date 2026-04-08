@@ -49,8 +49,8 @@ class _ReceiptScannerPageState extends State<ReceiptScannerPage> with SingleTick
                 child: Container(
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppTheme.gold,
-                    boxShadow: [BoxShadow(color: AppTheme.gold.withOpacity(0.5), blurRadius: 20, spreadRadius: 4)],
+                    color: AppTheme.primary,
+                    boxShadow: [BoxShadow(color: AppTheme.primary.withOpacity(0.5), blurRadius: 20, spreadRadius: 4)],
                   ),
                 ),
               );

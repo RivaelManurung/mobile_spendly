@@ -26,7 +26,7 @@ class SpendlyBottomNav extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _navItem(LucideIcons.home, 'Ringkasan', 0),
+                  _navItem(LucideIcons.home, 'Dashboard', 0),
                   _navItem(LucideIcons.barChart2, 'Statistik', 1),
                   const SizedBox(width: 50), // FAB Space
                   _navItem(LucideIcons.history, 'Riwayat', 2),

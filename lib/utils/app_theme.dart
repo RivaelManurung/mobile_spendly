@@ -2,25 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Palet Warna Premium (Luxury Dark)
-  static const Color bgPrimary = Color(0xFFFFFFFF);
-  static const Color bgSecondary = Color(0xFFF8F9FA);
+  // Palet Warna Modern SaaS (Clean & Professional)
+  static const Color bgPrimary = Color(0xFFF1F5F9); // Lighter background
+  static const Color bgSecondary = Color(0xFFE2E8F0);
   static const Color bgCard = Color(0xFFFFFFFF);
-  static const Color bgAI = Color(0xFFF1F5F9);
+  static const Color bgAI = Color(0xFFF8FAFC);
   
-  static const Color gold = Color(0xFFB08900);
-  static const Color goldDim = Color(0x15B08900);
-  static const Color emerald = Color(0xFF059669);
-  static const Color emeraldDim = Color(0x15059669);
-  static const Color rose = Color(0xFFE11D48);
-  static const Color roseDim = Color(0x15E11D48);
-  static const Color violet = Color(0xFF7C3AED);
-  static const Color violetDim = Color(0x157C3AED);
+  static const Color blue = Color(0xFF2563EB); // Modern SaaS Blue
+  static const Color blueDim = Color(0x152563EB);
+  static const Color emerald = Color(0xFF10B981);
+  static const Color emeraldDim = Color(0x1510B981);
+  static const Color rose = Color(0xFFEF4444);
+  static const Color roseDim = Color(0x15EF4444);
+  static const Color violet = Color(0xFF8B5CF6);
+  static const Color violetDim = Color(0x158B5CF6);
   
   static const Color textPrimary = Color(0xFF0F172A);
   static const Color textSecondary = Color(0xFF475569);
   static const Color textMuted = Color(0xFF94A3B8);
-  static const Color border = Color(0x1F000000);
+  static const Color border = Color(0xFFE2E8F0);
 
   // Typography helpers
   static TextStyle geist({
@@ -52,18 +52,18 @@ class AppTheme {
   static ThemeData get lightTheme => ThemeData(
     brightness: Brightness.light,
     scaffoldBackgroundColor: bgPrimary,
-    primaryColor: gold,
+    primaryColor: blue,
     textTheme: GoogleFonts.interTextTheme().apply(
       bodyColor: textPrimary,
       displayColor: textPrimary,
     ),
     colorScheme: ColorScheme.fromSeed(
-      seedColor: gold,
+      seedColor: blue,
       brightness: Brightness.light,
       surface: bgPrimary,
     ),
     appBarTheme: AppBarTheme(
-      backgroundColor: bgPrimary.withOpacity(0.8),
+      backgroundColor: bgPrimary,
       elevation: 0,
       centerTitle: true,
       iconTheme: const IconThemeData(color: textPrimary),
@@ -74,33 +74,49 @@ class AppTheme {
       ),
     ),
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
+      backgroundColor: Colors.white,
+      elevation: 8,
     ),
   );
 
   // Backward compatibility aliases
-  static const Color primary = gold;
-  static const Color primaryLight = goldLight; // Added back
-  static const Color goldLight = Color(0xFFD4B778); // Needed for alias
+  static const Color primary = blue;
+  static const Color primaryLight = Color(0xFF60A5FA); 
+  static const Color gold = blue; // Fallback
+  static const Color goldLight = Color(0xFF60A5FA); // Fallback
+  static const Color goldDim = blueDim; // Fallback
   static const Color bg = bgPrimary;
   static const Color income = emerald;
   static const Color expense = rose;
   static const Color surface = bgCard;
-  static const Color textHint = textMuted; // Added back
+  static const Color textHint = textMuted; 
 
   static TextStyle get fontMono => GoogleFonts.robotoMono(fontWeight: FontWeight.w600);
-  static TextStyle get fontDisplay => GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700);
+  static TextStyle get fontDisplay => GoogleFonts.inter(fontWeight: FontWeight.w700);
 
   static BoxDecoration get card => BoxDecoration(
     color: bgCard,
-    borderRadius: BorderRadius.circular(20),
+    borderRadius: BorderRadius.circular(16),
     border: Border.all(color: border),
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black.withOpacity(0.02),
+        blurRadius: 8,
+        offset: const Offset(0, 2),
+      ),
+    ],
   );
 
   static BoxDecoration get cardDecoration => BoxDecoration(
     color: bgCard,
-    borderRadius: BorderRadius.circular(20),
+    borderRadius: BorderRadius.circular(16),
     border: Border.all(color: border),
+    boxShadow: [
+      BoxShadow(
+        color: Colors.black.withOpacity(0.02),
+        blurRadius: 8,
+        offset: const Offset(0, 2),
+      ),
+    ],
   );
 }

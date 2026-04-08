@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:mobile_spendly/services/sync_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -10,6 +12,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animController;
+  bool _isSyncing = false;
 
   @override
   void initState() {
@@ -32,6 +35,40 @@ class _DashboardScreenState extends State<DashboardScreen>
       parent: _animController,
       curve: Interval(begin, end, curve: Curves.easeOutCubic),
     );
+  }
+
+  // Fungsi untuk menjalankan sinkronisasi
+  Future<void> _handleSync() async {
+    print('🚀 [UI] User menekan tombol Sync...');
+    setState(() => _isSyncing = true);
+    
+    try {
+      final syncService = context.read<SyncService>();
+      await syncService.syncAll();
+      
+      print('✨ [UI] Sinkronisasi Selesai Berhasil.');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Sinkronisasi berhasil! Data terupdate di Cloud.'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ Gagal sinkron: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSyncing = false);
+    }
   }
 
   @override
@@ -159,12 +196,28 @@ class _DashboardScreenState extends State<DashboardScreen>
             ),
           ],
         ),
-        CircleAvatar(
-          radius: 28,
-          backgroundColor: colorScheme.primaryContainer,
-          backgroundImage: const NetworkImage(
-            'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
-          ),
+        Row(
+          children: [
+            // TOMBOL SYNC
+            IconButton(
+              onPressed: _isSyncing ? null : _handleSync,
+              icon: _isSyncing 
+                ? const SizedBox(
+                    width: 20, 
+                    height: 20, 
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.blue)
+                  )
+                : Icon(Icons.cloud_sync_rounded, color: colorScheme.primary, size: 30),
+            ),
+            const SizedBox(width: 8),
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: colorScheme.primaryContainer,
+              backgroundImage: const NetworkImage(
+                'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+              ),
+            ),
+          ],
         ),
       ],
     );

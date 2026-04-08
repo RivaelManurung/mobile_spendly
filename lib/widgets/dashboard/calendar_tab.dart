@@ -71,11 +71,11 @@ class _CalendarTabState extends State<CalendarTab> {
       ),
       calendarStyle: CalendarStyle(
         todayDecoration: BoxDecoration(
-          color: AppTheme.goldDim,
+          color: AppTheme.primary.withOpacity(0.1),
           shape: BoxShape.circle,
         ),
         todayTextStyle: AppTheme.geist(
-          color: AppTheme.gold,
+          color: AppTheme.primary,
           w: FontWeight.w700,
         ),
         selectedDecoration: const BoxDecoration(
